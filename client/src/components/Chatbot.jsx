@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiMessageSquare, FiX, FiSend, FiCpu, FiTrendingUp } from 'react-icons/fi';
+import { FiMessageSquare, FiX, FiSend, FiCpu } from 'react-icons/fi';
+import API from '../services/api';
 
 const SUGGESTED_QUESTIONS = [
   'What is my total spent?',
@@ -54,14 +55,7 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: textToSend }),
-      });
-      const data = await res.json();
-      
-      // Append Bot Message
+      const { data } = await API.post('/chat', { question: textToSend });
       const botMsgId = Math.random().toString(36).substring(7);
       setMessages((prev) => [
         ...prev,
@@ -69,19 +63,23 @@ export default function Chatbot() {
           id: botMsgId,
           text: data.answer || "Sorry, I couldn't compute an answer. Let's try again.",
           isBot: true,
-          time: new Date()
-        }
+          time: new Date(),
+        },
       ]);
     } catch (err) {
-      const errorMsgId = Math.random().toString(36).substring(7);
+      const botMsgId = Math.random().toString(36).substring(7);
+      let text =
+        'Could not reach SpendBot. Make sure the API is running on port 5000.';
+      if (err.response?.status === 401) {
+        text = 'Please sign in again to use SpendBot.';
+      } else if (err.response?.status === 404) {
+        text = 'Chat endpoint not found — restart the backend server (`npm run server`).';
+      } else if (err.response?.data?.answer) {
+        text = err.response.data.answer;
+      }
       setMessages((prev) => [
         ...prev,
-        {
-          id: errorMsgId,
-          text: "⚠️ Connection error. Please make sure the backend server is running on port 5000 and try again.",
-          isBot: true,
-          time: new Date()
-        }
+        { id: botMsgId, text, isBot: true, time: new Date() },
       ]);
     } finally {
       setLoading(false);

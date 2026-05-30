@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FiDollarSign, FiTrendingUp, FiLayers, FiActivity, FiArrowUpRight } from 'react-icons/fi';
+import { FiDollarSign, FiTrendingUp, FiLayers, FiActivity, FiArrowUpRight, FiGlobe } from 'react-icons/fi';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatMoney } from '../lib/formatMoney';
 import {
   PieChart,
   Pie,
@@ -16,32 +18,46 @@ import {
 } from 'recharts';
 
 const COLORS = [
-  '#6366f1', // Indigo
-  '#10b981', // Emerald
   '#f59e0b', // Amber
+  '#ea580c', // Orange
+  '#10b981', // Emerald
   '#ec4899', // Pink
-  '#8b5cf6', // Violet
+  '#d97706', // Warm gold
   '#ef4444', // Red
-  '#06b6d4', // Cyan
-  '#f43f5e', // Rose
-  '#6b7280'  // Gray
+  '#14b8a6', // Teal
+  '#a855f7', // Violet
+  '#78716c', // Stone
 ];
 
 export default function Dashboard({ expenses }) {
-  
-  // 1. Dynamic Key Metrics Calculations
+  const { currency: preferredCurrency } = useCurrency();
+
   const metrics = useMemo(() => {
     if (expenses.length === 0) {
-      return { total: 0, count: 0, average: 0, topCategory: 'N/A' };
+      return {
+        total: 0,
+        count: 0,
+        average: 0,
+        topCategory: 'N/A',
+        displayCurrency: preferredCurrency,
+        isMixed: false,
+        currencyCount: 0,
+      };
     }
 
-    const total = expenses.reduce((sum, item) => sum + item.amount, 0);
-    const count = expenses.length;
-    const average = total / count;
+    const codes = [...new Set(expenses.map((item) => item.currency || 'USD'))];
+    const isMixed = codes.length > 1;
+    const displayCurrency = isMixed ? preferredCurrency : codes[0] || preferredCurrency;
+    const scoped = isMixed
+      ? expenses.filter((item) => (item.currency || 'USD') === displayCurrency)
+      : expenses;
 
-    // Calculate Top Category
+    const total = scoped.reduce((sum, item) => sum + item.amount, 0);
+    const count = expenses.length;
+    const average = scoped.length ? total / scoped.length : 0;
+
     const categoryTotals = {};
-    expenses.forEach((item) => {
+    scoped.forEach((item) => {
       categoryTotals[item.category] = (categoryTotals[item.category] || 0) + item.amount;
     });
 
@@ -54,8 +70,16 @@ export default function Dashboard({ expenses }) {
       }
     });
 
-    return { total, count, average, topCategory: topCat };
-  }, [expenses]);
+    return {
+      total,
+      count,
+      average,
+      topCategory: topCat,
+      displayCurrency,
+      isMixed,
+      currencyCount: codes.length,
+    };
+  }, [expenses, preferredCurrency]);
 
   // 2. Dynamic Monthly BarChart Summary
   const barData = useMemo(() => {
@@ -124,11 +148,15 @@ export default function Dashboard({ expenses }) {
   // 4. Custom Recharts Glass Tooltip component
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const val = payload[0].value;
+      const formatted = metrics.isMixed
+        ? `${val.toFixed(2)} (mixed currencies)`
+        : formatMoney(val, metrics.displayCurrency);
       return (
-        <div className="glass-panel px-4 py-2.5 rounded-xl text-left border shadow-lg border-indigo-500/10 dark:border-gray-800 text-xs font-semibold">
-          {label && <p className="text-gray-500 dark:text-gray-400 mb-1">{label}</p>}
-          <p className="text-indigo-600 dark:text-indigo-400 text-sm font-bold flex items-center gap-1">
-            Amount: <span className="text-gray-900 dark:text-white">${payload[0].value.toFixed(2)}</span>
+        <div className="glass-panel px-4 py-2.5 rounded-xl text-left border shadow-lg border-amber-500/10 dark:border-stone-700 text-xs font-semibold">
+          {label && <p className="text-stone-500 dark:text-stone-400 mb-1">{label}</p>}
+          <p className="text-amber-600 dark:text-amber-400 text-sm font-bold flex items-center gap-1">
+            Amount: <span className="text-gray-900 dark:text-white">{formatted}</span>
           </p>
         </div>
       );
@@ -168,23 +196,33 @@ export default function Dashboard({ expenses }) {
       animate="show"
       className="space-y-6"
     >
-      {/* 4 Metrics Stats Grid */}
+      {metrics.isMixed && (
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
+          <FiGlobe className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <p>
+            You have expenses in <strong>{metrics.currencyCount} currencies</strong>. Totals below are
+            for <strong>{metrics.displayCurrency}</strong> only. Charts combine amounts without
+            conversion.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Spending */}
         <motion.div variants={cardVariants} className="glass-panel p-5 rounded-2xl relative overflow-hidden group shadow-sm border border-white/40 dark:border-gray-800">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 tracking-wide uppercase">Total Outflow</span>
-            <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400 border border-indigo-500/10">
-              <FiDollarSign className="text-base" />
+            <div className="p-2 bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400 border border-amber-500/10">
+              <FiDollarSign className="text-base text-amber-600 dark:text-amber-400" />
             </div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-none">
-            ${metrics.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-none tabular-nums">
+            {formatMoney(metrics.total, metrics.displayCurrency)}
           </h3>
           <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium flex items-center gap-1">
-            <FiArrowUpRight className="text-indigo-500" /> Dynamic database sum
+            <FiArrowUpRight className="text-amber-500" /> All-time total
           </p>
-          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 to-violet-500"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 to-orange-500"></div>
         </motion.div>
 
         {/* Transactions Count */}
@@ -192,7 +230,7 @@ export default function Dashboard({ expenses }) {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 tracking-wide uppercase">Total Records</span>
             <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400 border border-emerald-500/10">
-              <FiLayers className="text-base" />
+              <FiLayers className="text-base text-emerald-600 dark:text-emerald-400" />
             </div>
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-none">
@@ -209,11 +247,11 @@ export default function Dashboard({ expenses }) {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 tracking-wide uppercase">Average Outflow</span>
             <div className="p-2 bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400 border border-amber-500/10">
-              <FiTrendingUp className="text-base" />
+              <FiTrendingUp className="text-base text-amber-600 dark:text-amber-400" />
             </div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-none">
-            ${metrics.average.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-none tabular-nums">
+            {formatMoney(metrics.average, metrics.displayCurrency)}
           </h3>
           <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium flex items-center gap-1">
             Calculated per transaction
@@ -226,7 +264,7 @@ export default function Dashboard({ expenses }) {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 tracking-wide uppercase">Top Category</span>
             <div className="p-2 bg-rose-500/10 rounded-xl text-rose-600 dark:text-rose-400 border border-rose-500/10">
-              <FiLayers className="text-base" />
+              <FiLayers className="text-base text-rose-600 dark:text-rose-400" />
             </div>
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-none truncate">
@@ -251,13 +289,13 @@ export default function Dashboard({ expenses }) {
             <h4 className="text-base font-bold text-gray-800 dark:text-white">Monthly Cost Timeline</h4>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Aggregate outflows grouped chronologically</p>
           </div>
-          <div className="h-[280px] w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[280px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <BarChart data={barData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.85} />
-                    <stop offset="100%" stopColor="#a855f7" stopOpacity={0.15} />
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#ea580c" stopOpacity={0.2} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#88888820" />
@@ -294,8 +332,8 @@ export default function Dashboard({ expenses }) {
             <h4 className="text-base font-bold text-gray-800 dark:text-white">Category Allocation</h4>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Budget percentage share across categories</p>
           </div>
-          <div className="h-[280px] w-full flex items-center justify-center relative">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[280px] w-full min-w-0 relative">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <PieChart>
                 <Pie
                   data={pieData}
@@ -325,8 +363,8 @@ export default function Dashboard({ expenses }) {
             {expenses.length > 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-7">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Budgeted</span>
-                <span className="text-xl font-bold text-gray-800 dark:text-white mt-1">
-                  ${metrics.total > 1000 ? `${(metrics.total/1000).toFixed(1)}k` : Math.round(metrics.total)}
+                <span className="text-lg font-bold text-gray-800 dark:text-white mt-1 tabular-nums text-center px-1">
+                  {formatMoney(metrics.total, metrics.displayCurrency)}
                 </span>
               </div>
             )}

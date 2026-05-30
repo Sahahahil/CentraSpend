@@ -1,0 +1,71 @@
+# --- Dependencies ---
+node_modules/
+
+# --- Environment & secrets (never commit) ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# --- Build output ---
+dist/
+dist-ssr/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# Vite
+client/dist/
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Runtime / uploads ---
+uploads/
+tmp/
+temp/
+*.pid
+*.seed
+
+# --- Test & coverage ---
+coverage/
+.nyc_output/
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Editors & IDEs ---
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# --- Cursor / local agent state ---
+.cursor/
+
+# --- Optional local tooling ---
+.vercel/
+.turbo/
+.cache/
+.eslintcache
+
+# --- Database dumps (local dev) ---
+*.dump
+dump/

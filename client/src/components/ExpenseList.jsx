@@ -60,14 +60,16 @@ export default function ExpenseList({ expenses, onEdit, onDelete }) {
       <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm border border-white/40 dark:border-gray-800">
         
         {/* Search Bar */}
-        <div className="relative flex-1">
-          <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+        <div className="input-with-icon flex-1">
+          <span className="input-with-icon__icon" aria-hidden="true">
+            <FiSearch />
+          </span>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search transactions..."
-            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white/40 dark:bg-gray-900/40 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 font-medium"
+            className="input-with-icon__field w-full pr-4 py-3 rounded-xl border border-amber-200/60 dark:border-stone-700 bg-white/60 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-500 transition-all duration-200 font-medium"
           />
         </div>
 
@@ -75,8 +77,8 @@ export default function ExpenseList({ expenses, onEdit, onDelete }) {
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           {/* Category Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap flex items-center gap-1">
-              <FiSliders className="text-sm" /> Category:
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 whitespace-nowrap flex items-center gap-1">
+              <FiSliders className="text-sm text-amber-600 dark:text-amber-400" /> Category:
             </span>
             <select
               value={categoryFilter}
@@ -93,8 +95,8 @@ export default function ExpenseList({ expenses, onEdit, onDelete }) {
 
           {/* Sort By Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap flex items-center gap-1">
-              <FiArrowDown className="text-sm" /> Sort By:
+            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 whitespace-nowrap flex items-center gap-1">
+              <FiArrowDown className="text-sm text-amber-600 dark:text-amber-400" /> Sort By:
             </span>
             <select
               value={sortBy}
@@ -130,7 +132,7 @@ export default function ExpenseList({ expenses, onEdit, onDelete }) {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="glass-panel p-12 rounded-2xl flex flex-col items-center justify-center text-center border-dashed border-gray-200 dark:border-gray-800/80 shadow-inner"
               >
-                <div className="p-4 bg-indigo-500/5 text-indigo-500 rounded-2xl mb-4 border border-indigo-500/10">
+                <div className="p-4 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-2xl mb-4 border border-amber-500/20">
                   <FiInbox className="text-4xl" />
                 </div>
                 <h4 className="text-base font-bold text-gray-800 dark:text-gray-100">

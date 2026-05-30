@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FiEdit2, FiTrash2, FiCoffee, FiTruck, FiZap, FiTv, FiShoppingBag, FiFileText, FiCompass, FiHeart, FiTag } from 'react-icons/fi';
+import { formatMoney } from '../lib/formatMoney';
 
 const CATEGORY_MAP = {
   Food: { icon: FiCoffee, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
@@ -11,11 +12,11 @@ const CATEGORY_MAP = {
   Bills: { icon: FiFileText, color: 'text-red-500 bg-red-500/10 border-red-500/20' },
   Travel: { icon: FiCompass, color: 'text-cyan-500 bg-cyan-500/10 border-cyan-500/20' },
   Health: { icon: FiHeart, color: 'text-pink-500 bg-pink-500/10 border-pink-500/20' },
-  Others: { icon: FiTag, color: 'text-gray-500 bg-gray-500/10 border-gray-500/20' }
+  Others: { icon: FiTag, color: 'text-stone-500 dark:text-stone-400 bg-stone-500/10 border-stone-500/20' }
 };
 
 export default function ExpenseCard({ expense, onEdit, onDelete }) {
-  const { _id, title, amount, category, date } = expense;
+  const { _id, title, amount, category, date, currency = 'USD' } = expense;
   const config = CATEGORY_MAP[category] || CATEGORY_MAP.Others;
   const CategoryIcon = config.icon;
 
@@ -38,7 +39,7 @@ export default function ExpenseCard({ expense, onEdit, onDelete }) {
       <div className="flex items-center gap-4.5 min-w-0">
         {/* Category Icon */}
         <div className={`p-3.5 rounded-xl border flex-shrink-0 ${config.color}`}>
-          <CategoryIcon className="text-xl" />
+          <CategoryIcon className="text-xl shrink-0 [color:inherit]" />
         </div>
 
         {/* Info */}
@@ -50,14 +51,16 @@ export default function ExpenseCard({ expense, onEdit, onDelete }) {
             <span className="font-medium">{formattedDate}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
             <span className="font-semibold text-gray-600 dark:text-gray-300">{category}</span>
+            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
+            <span className="font-medium text-amber-700/90 dark:text-amber-400/90">{currency}</span>
           </div>
         </div>
       </div>
 
       {/* Right Side Actions & Price */}
       <div className="flex items-center gap-4 flex-shrink-0">
-        <span className="text-base font-bold text-gray-900 dark:text-white leading-none">
-          -${parseFloat(amount).toFixed(2)}
+        <span className="text-base font-bold text-gray-900 dark:text-white leading-none tabular-nums">
+          −{formatMoney(amount, currency)}
         </span>
 
         {/* Action Controls */}
@@ -65,14 +68,14 @@ export default function ExpenseCard({ expense, onEdit, onDelete }) {
           <button
             onClick={() => onEdit(expense)}
             title="Edit Expense"
-            className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-500/5 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
+            className="p-1.5 rounded-lg text-stone-400 dark:text-amber-300/80 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
           >
             <FiEdit2 className="text-sm" />
           </button>
           <button
             onClick={() => onDelete(_id)}
             title="Delete Expense"
-            className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/5 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
+            className="p-1.5 rounded-lg text-stone-400 dark:text-amber-300/80 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
           >
             <FiTrash2 className="text-sm" />
           </button>
