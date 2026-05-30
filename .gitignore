@@ -69,3 +69,8 @@ Desktop.ini
 # --- Database dumps (local dev) ---
 *.dump
 dump/
+
+# --- Local Tooling ---
+.claude/
+.specify/
+CLAUDE.md
